@@ -106,7 +106,35 @@ async function run() {
             const result = await doctorCollection.deleteOne(query);
             res.send(result);
         })
+
+        app.get('/users/doctor/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await doctorCollection.findOne(query);
+            let doctor = false;
+            if (user) {
+                doctor = user?.role === 'doctor';
+            }
+            res.send({ doctor });
+        })
         
+
+        // admin related api
+
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            console.log(user)
+            let admin = false;
+            if (user) {
+                admin = user?.role === 'admin';
+            }
+            res.send({ admin });
+        })
+
+    
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
