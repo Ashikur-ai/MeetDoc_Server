@@ -68,7 +68,44 @@ async function run() {
         })
 
         // doctor related api 
-        
+        app.post('/doctors', async (req, res) => {
+            const user = req.body;
+            const query = { email: user.email };
+            const existingUser = await userCollection.findOne(query);
+            const existingDoctor = await doctorCollection.findOne(query);
+            if (existingUser || existingDoctor) {
+                return res.send({message: 'user already exists', insertedId: null})
+            }
+
+            const result = await doctorCollection.insertOne(user);
+            res.send(result);
+        })
+
+        app.get('/doctors', async (req, res) => {
+            const result = await doctorCollection.find().toArray();
+            res.send(result);
+        })
+
+        // make doctors 
+        app.patch('/users/doctor/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    role: 'doctor'
+                }
+            }
+            const result = await doctorCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
+
+
+        app.delete('/doctors/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await doctorCollection.deleteOne(query);
+            res.send(result);
+        })
         
 
         // Send a ping to confirm a successful connection
