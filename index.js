@@ -27,6 +27,9 @@ async function run() {
         await client.connect();
         const userCollection = client.db("meetDoc").collection("users");
         const doctorCollection = client.db("meetDoc").collection("doctors");
+        const meetingCollection = client.db("meetDoc").collection("meetings");
+
+        
 
         // user related api 
         app.post('/users', async (req, res) => {
@@ -86,6 +89,13 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/doctor/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const doctor = await doctorCollection.findOne(query);
+            res.send(doctor);
+        })
+
         // make doctors 
         app.patch('/users/doctor/:id', async (req, res) => {
             const id = req.params.id;
@@ -117,6 +127,27 @@ async function run() {
             }
             res.send({ doctor });
         })
+
+        app.patch('/updateDoctor', async (req, res) => {
+            const doctor = req.body;
+            const email = doctor.email;
+            
+            const query = { email: email };
+            const updatedDoc = {
+                $set: {
+                    institute: doctor.institute,
+                    category: doctor.category,
+                    qualification: doctor.qualification,
+                    fee: doctor.fee,
+                    url: doctor.url,
+                    bio: doctor.bio
+                }
+            }
+
+            const result = await doctorCollection.updateOne(query, updatedDoc);
+            res.send(result);
+            
+        })
         
 
         // admin related api
@@ -126,12 +157,34 @@ async function run() {
 
             const query = { email: email };
             const user = await userCollection.findOne(query);
-            console.log(user)
+            
             let admin = false;
             if (user) {
                 admin = user?.role === 'admin';
             }
             res.send({ admin });
+        })
+
+        // meeting related api
+
+        app.post('/setMeeting', async (req, res) => {
+            const meeting = req.body;
+            const result = await meetingCollection.insertOne(meeting);
+            res.send(result);
+        })
+
+        app.get('/getMeeting/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const meetings = await meetingCollection.find(query).toArray();
+            res.send(meetings);
+        })
+
+        app.delete('/meetings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await meetingCollection.deleteOne(query);
+            res.send(result);
         })
 
     
