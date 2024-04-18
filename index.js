@@ -172,6 +172,13 @@ async function run() {
             res.send(result);
             
         })
+
+        app.get('/getDocMeeting/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { doc_email: email };
+            const meetings = await meetingCollection.find(query).toArray();
+            res.send(meetings);
+        })
         
 
         // admin related api
@@ -190,6 +197,10 @@ async function run() {
         })
 
         // meeting related api
+        app.get('/meetings', async (req, res) => {
+            const result = await meetingCollection.find().toArray();
+            res.send(result);
+        })
 
         app.post('/setMeeting', async (req, res) => {
             const meeting = req.body;
@@ -208,6 +219,32 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await meetingCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        app.patch('/acceptRequest/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: 'accepted'
+                }
+            }
+
+            const result = await meetingCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
+
+        app.patch('/acceptPayment/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    payment: 'done'
+                }
+            }
+
+            const result = await meetingCollection.updateOne(filter, updatedDoc);
             res.send(result);
         })
 
