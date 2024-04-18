@@ -48,6 +48,30 @@ async function run() {
             res.send(result);
         })
 
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            res.send(user);
+        })
+
+        app.patch('/updateUser', async (req, res) => {
+            const user = req.body;
+            const email = user.email;
+
+            const query = { email: email };
+            const updatedDoc = {
+                $set: {
+                    url: user.url,
+                    bio: user.bio
+                }
+            }
+
+            const result = await userCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        })
+
         // make admin api
 
         app.patch('/users/admin/:id', async (req, res) => {
