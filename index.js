@@ -248,6 +248,14 @@ async function run() {
             res.send(result);
         })
 
+        // category related api 
+        app.get('/doctors/:category', async (req, res) => {
+            const category = req.params.category;
+            const query = { category: category };
+            const doctors = await doctorCollection.find(query).toArray();
+            res.send(doctors);
+        })
+
     
 
         // Send a ping to confirm a successful connection
