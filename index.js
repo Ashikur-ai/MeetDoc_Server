@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SK)
 const port = process.env.PORT || 5000;
 
 // middleware 
@@ -28,6 +29,8 @@ async function run() {
         const userCollection = client.db("meetDoc").collection("users");
         const doctorCollection = client.db("meetDoc").collection("doctors");
         const meetingCollection = client.db("meetDoc").collection("meetings");
+        const paymentCollection = client.db("meetDoc").collection("payments");
+        const feedbackCollection = client.db("meetDoc").collection("feedbacks");
 
         
 
@@ -215,6 +218,13 @@ async function run() {
             res.send(meetings);
         })
 
+        app.get('/meetings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await meetingCollection.findOne(query);
+            res.send(result);
+        })
+
         app.delete('/meetings/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -248,12 +258,55 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/stripePay', async (req, res) => {
+            const payment = req.body;
+            const result = await paymentCollection.insertOne(payment);
+            res.send(result);
+        })
+
+        app.get('/payments/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const payments = await paymentCollection.find(query).toArray();
+            res.send(payments);
+        })
+
         // category related api 
         app.get('/doctors/:category', async (req, res) => {
             const category = req.params.category;
             const query = { category: category };
             const doctors = await doctorCollection.find(query).toArray();
             res.send(doctors);
+        })
+
+        // payment intents 
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+
+
+        // feedback api 
+        app.post('/feedback', async (req, res) => {
+            const data = req.body;
+            console.log(data);
+            const result = await feedbackCollection.insertOne(data);
+            res.send(result);
+        })
+
+        app.get('/feedback', async (req, res) => {
+            const result = await feedbackCollection.find().toArray();
+            res.send(result);
         })
 
     
